@@ -8,24 +8,26 @@ import re
 TWITCH_NICK = "ikinonesa"
 TWITCH_TOKEN = "oauth:m9fjxy56isocq24r4rq7fo5vwpbxg5"
 TWITCH_CHANNEL = "uzya"
-DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1428025518514638910/DV2F1msT3xpOQJDM4Gu4RViS52-yyzasbzufQSXKnC52s90C6w1tLzydQtQx9GXysUXd"
+DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1428400521865203835/JPpu6qOtpzskwv4SxctCaRi7HULcCJ1se0kDiWgVFt0sgkhiCLQ9iAQU3Qv9biUcxOms"
+THREAD_ID = "1428397665384927262"  # ваш пост форума
 MAX_MONTHS_BACK = 12  # сколько месяцев проверяем назад
 BESTLOGS_BASE_URL = "https://bestlogs.supa.codes/channel/uzya/user"
 # ===============================
 
 banned_lock = asyncio.Lock()
 
-# --- helper: send discord message ---
+# --- send discord message to forum post ---
 async def send_discord_message(content: str):
+    url = f"{DISCORD_WEBHOOK_URL}?thread_id={THREAD_ID}"
     async with aiohttp.ClientSession() as session:
         try:
             payload = {"content": content}
-            async with session.post(DISCORD_WEBHOOK_URL, json=payload, timeout=10) as resp:
-                if resp.status not in (200, 204):
+            async with session.post(url, json=payload, timeout=10) as resp:
+                if resp.status in (200, 204):
+                    print(f"[Discord] ✅ Сообщение отправлено в пост форума")
+                else:
                     text = await resp.text()
                     print(f"[Discord] Ошибка отправки ({resp.status}): {text}")
-                else:
-                    print(f"[Discord] ✅ Отправлено: {content}")
         except Exception as e:
             print(f"[Discord] Exception: {e}")
 
@@ -65,12 +67,13 @@ def find_last_message_in_log_text(log_text: str, nick: str, ban_dt: datetime):
             continue
         if ts > ban_dt:
             continue
+        # игнорируем сообщения о бане
         if re.search(r'\b(ban|has been banned|timed out|was timed out)\b', msg, re.IGNORECASE):
             continue
         last_found = (msg, ts)
     return last_found  # None или (msg, ts)
 
-# --- get last message for nick, проверяем начиная с текущего месяца и идём назад ---
+# --- get last message for nick ---
 async def get_last_message_for_nick(nick: str):
     now = datetime.now(timezone.utc)
     year = now.year
@@ -83,14 +86,18 @@ async def get_last_message_for_nick(nick: str):
             found = find_last_message_in_log_text(log_text, nick, ban_dt)
             if found:
                 return found
+        # идём на месяц назад
         month -= 1
         if month == 0:
             month = 12
             year -= 1
     return (None, None)
 
-# --- асинхронная обработка банов ---
+# --- handle a ban asynchronously ---
 async def handle_ban(nick: str):
+    print(f"[{datetime.now(timezone.utc).isoformat()}] Бан получен: {nick}, ожидаем 10 секунд для логов...")
+    await asyncio.sleep(10)  # ждём 10 секунд перед проверкой логов
+
     msg_text, msg_ts = await get_last_message_for_nick(nick)
     if msg_text:
         ts_str = msg_ts.strftime("%Y-%m-%d %H:%M:%S") if msg_ts else "?"
@@ -98,7 +105,7 @@ async def handle_ban(nick: str):
     else:
         to_send = f"Пользователь забанен: **{nick}**\nПоследнее сообщение: (нет сообщений в логах)"
 
-    print(f"[{datetime.now(timezone.utc).isoformat()}] Бан: {nick} — last_msg={msg_text}")
+    print(f"[{datetime.now(timezone.utc).isoformat()}] Бан обработан: {nick} — last_msg={msg_text}")
     await send_discord_message(to_send)
 
 # --- twitch client ---
@@ -107,8 +114,7 @@ class BanWatcher(Client):
         print(f"✅ Connected as {TWITCH_NICK}, listening {TWITCH_CHANNEL}")
 
     async def event_message(self, message: Message):
-        # Мы не храним все сообщения, только парсим по бану
-        return
+        return  # не хранится в памяти, ищем по логам
 
     async def event_raw_data(self, raw: str):
         if " CLEARCHAT " not in raw or f"#{TWITCH_CHANNEL}" not in raw:
@@ -122,7 +128,7 @@ class BanWatcher(Client):
         if not nick:
             return
 
-        # Асинхронно обрабатываем каждый бан, не блокируя следующие
+        # Асинхронно обрабатываем каждый бан
         asyncio.create_task(handle_ban(nick))
 
 # --- main ---
