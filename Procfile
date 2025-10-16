@@ -1,1 +1,1 @@
-worker: python twitchbot.py
+worker: python bot_twitch.py
