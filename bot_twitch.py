@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 import aiohttp
 from twitchio import Client, Message
 import re
+from aiohttp import web  # 👈 добавлено для анти-сна
 
 # ======= НАСТРОЙКИ =======
 TWITCH_NICK = "ikinonesa"
@@ -71,7 +72,7 @@ def find_last_message_in_log_text(log_text: str, nick: str, ban_dt: datetime):
         if re.search(r'\b(ban|has been banned|timed out|was timed out)\b', msg, re.IGNORECASE):
             continue
         last_found = (msg, ts)
-    return last_found  # None или (msg, ts)
+    return last_found
 
 # --- get last message for nick ---
 async def get_last_message_for_nick(nick: str):
@@ -128,11 +129,24 @@ class BanWatcher(Client):
         if not nick:
             return
 
-        # Асинхронно обрабатываем каждый бан
         asyncio.create_task(handle_ban(nick))
+
+# --- анти-сон вебсервер ---
+async def keepalive_server():
+    async def handle(request):
+        return web.Response(text="Bot is alive and running!")
+
+    app = web.Application()
+    app.router.add_get("/", handle)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, "0.0.0.0", 8080)
+    await site.start()
+    print("[KeepAlive] Мини вебсервер запущен на порту 8080")
 
 # --- main ---
 async def main():
+    await keepalive_server()  # анти-сон
     bot = BanWatcher(token=TWITCH_TOKEN, initial_channels=[TWITCH_CHANNEL])
     await bot.start()
 
