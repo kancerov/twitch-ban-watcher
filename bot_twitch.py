@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime
+from datetime import datetime, timezone
 import aiohttp
 from twitchio import Client, Message
 import re
@@ -60,7 +60,7 @@ def find_last_message_in_log_text(log_text: str, nick: str, ban_dt: datetime):
             continue
         msg = m.group("msg").strip()
         try:
-            ts = datetime.strptime(m.group("ts"), "%Y-%m-%d %H:%M:%S")
+            ts = datetime.strptime(m.group("ts"), "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
         except Exception:
             continue
         if ts > ban_dt:
@@ -72,7 +72,7 @@ def find_last_message_in_log_text(log_text: str, nick: str, ban_dt: datetime):
 
 # --- get last message for nick, проверяем начиная с текущего месяца и идём назад ---
 async def get_last_message_for_nick(nick: str):
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     year = now.year
     month = now.month
     ban_dt = now
@@ -98,7 +98,7 @@ async def handle_ban(nick: str):
     else:
         to_send = f"Пользователь забанен: **{nick}**\nПоследнее сообщение: (нет сообщений в логах)"
 
-    print(f"[{datetime.utcnow().isoformat()}] Бан: {nick} — last_msg={msg_text}")
+    print(f"[{datetime.now(timezone.utc).isoformat()}] Бан: {nick} — last_msg={msg_text}")
     await send_discord_message(to_send)
 
 # --- twitch client ---
