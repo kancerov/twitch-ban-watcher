@@ -1,0 +1,7 @@
+services:
+  - type: worker
+    name: twitch-ban-watcher
+    env: python
+    plan: free
+    buildCommand: ""
+    startCommand: "python bot.py"
