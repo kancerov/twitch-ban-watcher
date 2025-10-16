@@ -8,8 +8,8 @@ import re
 TWITCH_NICK = "ikinonesa"
 TWITCH_TOKEN = "oauth:m9fjxy56isocq24r4rq7fo5vwpbxg5"
 TWITCH_CHANNEL = "uzya"
-DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1428400521865203835/JPpu6qOtpzskwv4SxctCaRi7HULcCJ1se0kDiWgVFt0sgkhiCLQ9iAQU3Qv9biUcxOms"
-THREAD_ID = "1428397665384927262"  # ваш пост форума
+DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1428397350174331081/47GVqb8wZyMOAg-AOu22G7aYrj8C1BFPphnC4jzbNG0jQ2RVQEVOg0tgx88DEymkp7PU"
+THREAD_ID = "1427256764394639420"  # ваш пост форума
 MAX_MONTHS_BACK = 12  # сколько месяцев проверяем назад
 BESTLOGS_BASE_URL = "https://bestlogs.supa.codes/channel/uzya/user"
 # ===============================
@@ -141,3 +141,4 @@ if __name__ == "__main__":
         asyncio.run(main())
     except KeyboardInterrupt:
         print("Stopped")
+
