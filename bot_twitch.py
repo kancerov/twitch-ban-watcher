@@ -14,7 +14,7 @@ THREAD_ID = "1427256764394639420"  # ваш пост форума
 MAX_MONTHS_BACK = 24  # сколько месяцев проверяем назад
 BESTLOGS_BASE_URL = "https://bestlogs.supa.codes/channel/uzya/user"
 STREAM_CHECK_INTERVAL = 120  # каждые 2 минуты проверяем стрим
-STREAM_IMAGE_URL = "https://cdn.discordapp.com/attachments/1428397665384927262/1429105246566748301/image.png?ex=68f4ed7a&is=68f39bfa&hm=679549648866f47d654ce21a56fcd260bf73da85013e64211f7f4ca10bdfb4d1&"
+STREAM_PREVIEW_IMAGE = "https://cdn.discordapp.com/attachments/1428397665384927262/1429105246566748301/image.png?ex=68f4ed7a&is=68f39bfa&hm=679549648866f47d654ce21a56fcd260bf73da85013e64211f7f4ca10bdfb4d1&"
 # ===============================
 
 banned_lock = asyncio.Lock()
@@ -179,3 +179,4 @@ if __name__ == "__main__":
         asyncio.run(main())
     except KeyboardInterrupt:
         print("Stopped")
+
